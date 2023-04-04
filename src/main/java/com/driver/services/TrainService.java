@@ -26,7 +26,18 @@ public class TrainService {
         //and route String logic to be taken from the Problem statement.
         //Save the train and return the trainId that is generated from the database.
         //Avoid using the lombok library
-        return null;
+
+        Train train = new Train();
+        train.setDepartureTime(trainEntryDto.getDepartureTime());
+        train.setNoOfSeats(trainEntryDto.getNoOfSeats());
+        String route = "";
+        for(Station station : trainEntryDto.getStationRoute()){
+            route += station.toString();
+        }
+        train.setRoute(route);
+
+        trainRepository.save(train);
+        return train.getTrainId();
     }
 
     public Integer calculateAvailableSeats(SeatAvailabilityEntryDto seatAvailabilityEntryDto){
@@ -39,7 +50,7 @@ public class TrainService {
         //even if that seat is booked post the destStation or before the boardingStation
         //Inshort : a train has totalNo of seats and there are tickets from and to different locations
         //We need to find out the available seats between the given 2 stations.
-
+        Train train = trainRepository.findById(seatAvailabilityEntryDto.getTrainId()).get();
        return null;
     }
 
@@ -49,7 +60,23 @@ public class TrainService {
         //if the trainId is not passing through that station
         //throw new Exception("Train is not passing from this station");
         //  in a happy case we need to find out the number of such people.
+        Train train = trainRepository.findById(trainId).get();
 
+        if(station.toString().indexOf(train.getRoute()) > -1){
+            List<Ticket> tickets = train.getBookedTickets();
+            int total = 0;
+            for(Ticket ticket : tickets){
+                List<Passenger> passengers = ticket.getPassengersList();
+                for(Passenger passenger : passengers){
+//                    if(station.toString().equals(ticket.toString())> -1){
+//
+//                    }
+                }
+            }
+        }
+        else{
+            throw new Exception("Train is not passing from this station");
+        }
 
         return 0;
     }
