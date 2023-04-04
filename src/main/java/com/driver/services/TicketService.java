@@ -45,54 +45,67 @@ public class TicketService {
        //And the end return the ticketId that has come from db
 
         Train train = trainRepository.findById(bookTicketEntryDto.getTrainId()).get();
-        int avilable = train.getNoOfSeats() - train.getBookedTickets().size();
-
-        Ticket ticket = null;
-        if (avilable >= bookTicketEntryDto.getNoOfSeats()){
-            if(bookTicketEntryDto.getFromStation().toString().indexOf(train.getRoute()) > -1){
-                ticket.setTrain(train);
-                ticket.setFromStation(bookTicketEntryDto.getFromStation());
-                ticket.setToStation(bookTicketEntryDto.getToStation());
-                List<Passenger> passengers = new ArrayList<>();
-                for (int ids : bookTicketEntryDto.getPassengerIds()){
-                    Passenger passenger = passengerRepository.findById(ids).get();
-                    passengers.add(passenger);
-                }
-                ticket.setPassengersList(passengers);
-
-                int distance = FindDidtance(bookTicketEntryDto.getFromStation(), bookTicketEntryDto.getToStation());
-                int fare = (distance-1)*300;
-
-                ticket.setTotalFare(fare);
-
-                Passenger passenger = passengerRepository.findById(bookTicketEntryDto.getBookingPersonId()).get();
-                ticketRepository.save(ticket);
-                List<Ticket> tickets = passenger.getBookedTickets();
-                tickets.add(ticket);
-                passenger.setBookedTickets(tickets);
-                trainRepository.save(train);
-            }
-            else{
-                throw new Exception("Invalid stations");
-            }
+        int bookedSeats=0;
+        List<Ticket>booked=train.getBookedTickets();
+        for(Ticket ticket:booked){
+            bookedSeats+=ticket.getPassengersList().size();
         }
-        else{
+        if(bookedSeats+bookTicketEntryDto.getNoOfSeats()> train.getNoOfSeats()){
             throw new Exception("Less tickets are available");
         }
-       return ticket == null ? null : ticket.getTicketId();
-    }
 
-    public int FindDidtance(Station fromStation, Station toStation){
-        EnumSet<Station> set1 = EnumSet.allOf(Station.class);
-        int distance = 0;
-        int i = 0;
-        for (Station station : set1){
-             if(station == fromStation || station == toStation){
-                 distance += i;
-             }
-             i++;
+        String stations[]=train.getRoute().split(",");
+
+        List<Passenger>passengerList=new ArrayList<>();
+        List<Integer>ids=bookTicketEntryDto.getPassengerIds();
+
+        for(int id: ids){
+            passengerList.add(passengerRepository.findById(id).get());
+        }
+        int x=-1,y=-1;
+        for(int i=0;i<stations.length;i++){
+            if(bookTicketEntryDto.getFromStation().toString().equals(stations[i])){
+                x=i;
+                break;
+            }
+        }
+        for(int i=0;i<stations.length;i++){
+            if(bookTicketEntryDto.getToStation().toString().equals(stations[i])){
+                y=i;
+                break;
+            }
+        }
+        if(x==-1||y==-1||y-x<0){
+            throw new Exception("Invalid stations");
         }
 
-        return distance;
+        Ticket ticket=new Ticket();
+        ticket.setPassengersList(passengerList);
+        ticket.setFromStation(bookTicketEntryDto.getFromStation());
+        ticket.setToStation(bookTicketEntryDto.getToStation());
+        int fair=0;
+        fair=bookTicketEntryDto.getNoOfSeats()*(y-x)*300;
+
+        ticket.setTotalFare(fair);
+        ticket.setTrain(train);
+
+        train.getBookedTickets().add(ticket);
+        train.setNoOfSeats(train.getNoOfSeats()-bookTicketEntryDto.getNoOfSeats());
+
+        Passenger passenger=passengerRepository.findById(bookTicketEntryDto.getBookingPersonId()).get();
+        passenger.getBookedTickets().add(ticket);
+
+        trainRepository.save(train);
+
+        return ticket.getTicketId();
     }
 }
+
+
+
+
+
+
+
+
+
