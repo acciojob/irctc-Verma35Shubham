@@ -19,7 +19,7 @@ public class TrainService {
     @Autowired
     TrainRepository trainRepository;
 
-    List<Train>trains=new ArrayList<>();
+    List<Train>trains = new ArrayList<>();
     public Integer addTrain(AddTrainEntryDto trainEntryDto){
 
         //Add the train to the trainRepository
@@ -34,18 +34,17 @@ public class TrainService {
         List<Station> list = trainEntryDto.getStationRoute();
         String route = "";
 
-        for(int i=0;i<list.size();i++){
-            if(i==list.size()-1)
+        for(int i = 0; i<list.size(); i++){
+            if(i == list.size()-1)
                 route += list.get(i);
             else
                 route += list.get(i) + ",";
         }
         train.setRoute(route);
+
         trains.add(train);
 
-        trainRepository.save(train);
-
-        return train.getTrainId();
+        return trainRepository.save(train).getTrainId();
     }
 
     public Integer calculateAvailableSeats(SeatAvailabilityEntryDto seatAvailabilityEntryDto){
